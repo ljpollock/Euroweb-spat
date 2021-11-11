@@ -1,46 +1,35 @@
----
-title: "Metrics"
-author: 'Author: L Pollock'
-date: 'Last update: "`r Sys.Date()`"'
-output: github_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+Metrics
+================
+Author: L Pollock
+Last update: “2021-11-11”
 
 Metrics - Biotic Interactions
 
-Biotic Interactions calculated from meta-web- who eats whom, binary interactions
+Biotic Interactions calculated from meta-web- who eats whom, binary
+interactions
 
-Definitions of metawebs: (all are Adult and juvenille interactions, no eggs)
-Metaweb1 - Potential (no co-occurrence/habitat requirement)
-Metaweb2 - P-P must occur in at least 1 pixel together
-Metaweb4 - GloBI interactions
+Definitions of metawebs: (all are Adult and juvenille interactions, no
+eggs) Metaweb1 - Potential (no co-occurrence/habitat requirement)
+Metaweb2 - P-P must occur in at least 1 pixel together Metaweb4 - GloBI
+interactions
 
 For each species in each site, the following metrics are calculated:
--the number of prey species
--competition (see metrics)
+-the number of prey species -competition (see metrics)
 
-Competition Metrics:
-RA - richness of competitors (competitors=a species that shares at least one prey species)
-R25 - richness of competitors (competitors=a species that shares at least 25% of its total prey species)
-R90 - richness of strong competitors (competitors=a species that shares at least 90% of its total prey species)
+Competition Metrics: RA - richness of competitors (competitors=a species
+that shares at least one prey species) R25 - richness of competitors
+(competitors=a species that shares at least 25% of its total prey
+species) R90 - richness of strong competitors (competitors=a species
+that shares at least 90% of its total prey species)
 
-
-
-Scenarios:
-Run 1 - Metaweb1 + R25
-Run 2 - Metaweb2 + R25
-Run 3 - Metaweb2 + R90
-Rub 4 - Metaweb2 + RA
-Run 5 - Metaweb4 + RA
+Scenarios: Run 1 - Metaweb1 + R25 Run 2 - Metaweb2 + R25 Run 3 -
+Metaweb2 + R90 Rub 4 - Metaweb2 + RA Run 5 - Metaweb4 + RA
 
 Notation is row.by.column
-  
 
 Set-up
-```{r, eval=FALSE}
+
+``` r
 library(Matrix)
 
 #site by species matrix
@@ -57,12 +46,11 @@ rownames(globi) <- globi[,1]
 globi <- globi[-1]
 globi2 <- t(globi)
 rm(globi)
-
 ```
 
-Metaweb 1 - Potential (no filters, only who 'could' eat whom)
-```{r, eval=FALSE}
+Metaweb 1 - Potential (no filters, only who ‘could’ eat whom)
 
+``` r
 pred.by.prey <- BARM.binary
 rm(BARM.binary)
 
@@ -81,9 +69,10 @@ save(pred.by.prey,file="pred.by.prey.Metaweb1.Rdata")
 rm(pred.by.prey)
 ```
 
+Metaweb 2 - “Realized” - Potential interactions from MW 1, but also must
+co-occur in one or more pixels
 
-Metaweb 2 - "Realized" - Potential interactions from MW 1, but also must co-occur in one or more pixels
-```{r, eval=FALSE}
+``` r
 load("pred.by.prey.Metaweb1.Rdata")
 
 if (any (!colnames(pred.by.prey) %in% colnames(site.by.species))) {print("warning:name mismatch")}
@@ -102,13 +91,11 @@ pred.by.prey <- pred.by.prey * shared.sites.per.species
 
 if (sum(pred.by.prey)!=45809) {print("warning:wrong n. inters")}
 save(pred.by.prey, file="pred.by.prey.Metaweb2Realized.Rdata")
-
 ```
 
-
-
 Metaweb 4 - GloBI interactions
-```{r, eval=FALSE}
+
+``` r
 load("pred.by.prey.Metaweb4Globi.Rdata")
 pred.by.prey <- globi2
 rm(globi2)
@@ -136,13 +123,11 @@ save(namz,file="MW4Globispecieslist.Rdata")
 rm(pred.by.prey)
 ```
 
-
-
 Calculate species-level metrics for main scenario (Metaweb 2: R25)
 
 Set-up
-```{r, eval=FALSE}
 
+``` r
 library(Matrix)
 
 #site by species matrix
@@ -216,13 +201,11 @@ SpWebStats[["RScomp"]] <- meanRangSizCompetitorPerTargetSp
 
 
 save(SpWebStats,file = "SpeciesLevelWebStatisticsMW2R25.Rdata")
-
 ```
 
-
 Set-up
-```{r, eval=FALSE}
 
+``` r
 load("SpeciesLevelWebStatistics.Rdata")
 load("MW2specieslist.Rdata")
 
@@ -265,14 +248,11 @@ boxplotz(t.sp,col=5:6,labz,ylim=c(0,60))
 boxplotz(t.sp,col=8:9,labz,ylim=c(0,320))
 
 dev.off()
-
 ```
 
-
-
 Set-up
-```{r, eval=FALSE}
 
+``` r
 ## combine both sets of species for appendix..
 
 
@@ -302,18 +282,13 @@ boxplotz2(b,l)
 dev.off()
 
 rm(t.sp,pred.by.prey)
-
 ```
-
-
-
-
 
 Calculate species level metrics for GloBI interactions
 
 Set-up
-```{r, eval=FALSE}
 
+``` r
 library(Matrix)
 
 #site by species matrix
@@ -416,8 +391,4 @@ SpWebStats[["RSapcomp"]] <- meanRangSizAppCompetitorPerTargetSp
 save(SpWebStats,file = "SpeciesLevelWebStatisticsGloBI.Rdata")
 
 rm(SpWebStats)
-
 ```
-
-
-
