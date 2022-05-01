@@ -1,0 +1,394 @@
+Metrics
+================
+Author: L Pollock
+Last update: “2021-11-11”
+
+Metrics - Biotic Interactions
+
+Biotic Interactions calculated from meta-web- who eats whom, binary
+interactions
+
+Definitions of metawebs: (all are Adult and juvenille interactions, no
+eggs) Metaweb1 - Potential (no co-occurrence/habitat requirement)
+Metaweb2 - P-P must occur in at least 1 pixel together Metaweb4 - GloBI
+interactions
+
+For each species in each site, the following metrics are calculated:
+-the number of prey species -competition (see metrics)
+
+Competition Metrics: RA - richness of competitors (competitors=a species
+that shares at least one prey species) R25 - richness of competitors
+(competitors=a species that shares at least 25% of its total prey
+species) R90 - richness of strong competitors (competitors=a species
+that shares at least 90% of its total prey species)
+
+Scenarios: Run 1 - Metaweb1 + R25 Run 2 - Metaweb2 + R25 Run 3 -
+Metaweb2 + R90 Rub 4 - Metaweb2 + RA Run 5 - Metaweb4 + RA
+
+Notation is row.by.column
+
+Set-up
+
+``` r
+library(Matrix)
+
+#site by species matrix
+load("InputData/SiteBySpecies21Feb.Rdata")
+#metaweb - adult-only interactions - amphibians have ZERO prey
+#load("~/Documents/Manuscripts/EuropeanFoodWebCons/manuscript/Manuscript/Analyses3October18/MetaWebFromJ/BARMbinADULT.RData")
+
+#metaweb - adult plus juvenille, no eggs
+load("InputData/BARMbinWTeggs.RData")
+
+#web from GloBI  ####  note:Predators are in columns
+globi <- read.csv('InputData/globi_species_Dom.csv')
+rownames(globi) <- globi[,1]
+globi <- globi[-1]
+globi2 <- t(globi)
+rm(globi)
+```
+
+Metaweb 1 - Potential (no filters, only who ‘could’ eat whom)
+
+``` r
+pred.by.prey <- BARM.binary
+rm(BARM.binary)
+
+PdPy <- pred.by.prey[intersect(colnames(site.by.species),rownames(pred.by.prey)),
+                             intersect(colnames(site.by.species),colnames(pred.by.prey))]
+PdPy[is.na(PdPy)]<-0
+rm(pred.by.prey)
+
+pred.by.prey <- Matrix(PdPy)
+rm(PdPy)
+if (sum(colSums(pred.by.prey))!=68390) {print("warning:check inputs")}
+
+setwd("~/Documents/Manuscripts/EuropeanFoodWebCons/manuscript/Manuscript/Analyses21Feb19")
+save(pred.by.prey,file="pred.by.prey.Metaweb1.Rdata")
+
+rm(pred.by.prey)
+```
+
+Metaweb 2 - “Realized” - Potential interactions from MW 1, but also must
+co-occur in one or more pixels
+
+``` r
+load("pred.by.prey.Metaweb1.Rdata")
+
+if (any (!colnames(pred.by.prey) %in% colnames(site.by.species))) {print("warning:name mismatch")}
+
+species.by.site <- t(site.by.species)
+
+#diagonal=total pixel occurrences for each species, 
+#off diagonal=joint probabilities (the intersection or the cells both occur in)
+shared.sites.per.species <- species.by.site %*% site.by.species
+#do sp co-occur or not
+shared.sites.per.species[shared.sites.per.species > 1] <- 1
+
+#scalar multiply for only pred-prey relationships that co-occur at least once
+### 68390 pairs of pred/prey of potential, and 47061 of 'realized'
+pred.by.prey <- pred.by.prey * shared.sites.per.species
+
+if (sum(pred.by.prey)!=45809) {print("warning:wrong n. inters")}
+save(pred.by.prey, file="pred.by.prey.Metaweb2Realized.Rdata")
+```
+
+Metaweb 4 - GloBI interactions
+
+``` r
+load("pred.by.prey.Metaweb4Globi.Rdata")
+pred.by.prey <- globi2
+rm(globi2)
+
+PdPy <- pred.by.prey[intersect(colnames(site.by.species),rownames(pred.by.prey)),
+                             intersect(colnames(site.by.species),colnames(pred.by.prey))]
+PdPy[is.na(PdPy)]<-0
+rm(pred.by.prey)
+
+pred.by.prey <- as.matrix(PdPy)
+rm(PdPy)
+if (sum(colSums(pred.by.prey))!=301) {print("warning:check inputs")}
+
+save(pred.by.prey,file="pred.by.prey.Metaweb4Globi.Rdata")
+
+
+#check which species have preds and prey
+sp <- cbind(colSums(pred.by.prey),rowSums(pred.by.prey))
+sp[sp>0] <- 1
+spsum <- sp[,1] + sp[,2]
+namz <- names(spsum[which(spsum %in% 2)]) #only those with pred and prey 
+
+save(namz,file="MW4Globispecieslist.Rdata")
+
+rm(pred.by.prey)
+```
+
+Calculate species-level metrics for main scenario (Metaweb 2: R25)
+
+Set-up
+
+``` r
+library(Matrix)
+
+#site by species matrix
+load("SiteBySpecies21Feb.Rdata")
+#metaweb
+load("pred.by.prey.Metaweb2Realized.Rdata")
+
+if (any( colnames(site.by.species) %in% colnames(pred.by.prey)==FALSE)) {print("mismatched names")}
+
+
+#set up list of stats to report
+s <- c("RangeSize","meanSRsp","Nprey","Ncomp","RSprey","RScomp")
+SpWebStats <- vector("list", length(s)) 
+names(SpWebStats) <- s
+
+#prep
+prey.by.pred <- t(pred.by.prey)
+species.by.site <- t(site.by.species)
+
+#range size of each species
+site.no.occur <- colSums(site.by.species)
+SpWebStats[["RangeSize"]] <- site.no.occur
+
+#ave species richness across cells occupied by species i
+SR <- colSums(species.by.site)
+spSR <- species.by.site*SR
+totspSR <- rowSums(spSR)
+meanspSR <- totspSR/site.no.occur
+SpWebStats[["meanSRsp"]] <- meanspSR
+
+
+#number of prey per predator (potential prey)
+TotalNuPreySpeciesPerPred <- colSums(prey.by.pred)
+SpWebStats[["Nprey"]] <- TotalNuPreySpeciesPerPred
+
+#ave prey richness across cells occupied by predator i (realized prey across the landscape)
+site.by.prey <- site.by.species %*% prey.by.pred
+SpWebStats[["RZprey"]] <- colMeans(site.by.prey)
+
+# mean number of occurrences across prey for each predator (average range size of prey for each pred)
+prey.preyrichifpred <- prey.by.pred*site.no.occur
+totalrichPreyPerPredSp <- colSums(prey.preyrichifpred)
+meanRangSizPreyPerPredSp <- totalrichPreyPerPredSp / TotalNuPreySpeciesPerPred
+SpWebStats[["RSprey"]] <- meanRangSizPreyPerPredSp
+
+## competitors---------------
+ShPrey <- pred.by.prey %*% prey.by.pred
+
+#share 25% of prey
+ShPrey <- pred.by.prey %*% prey.by.pred
+cs <- ShPrey/colSums(prey.by.pred)
+cs[cs<0.25] <- 0
+cs[cs>=0.25] <- 1
+cs[is.na(cs)] <- 0 
+ShPrey <- t(cs)
+diag(ShPrey) <- 0
+
+#ave competitor richness across cells occupied by predator i (realized competitors across the landscape)
+site.by.comp <- site.by.species %*% ShPrey
+SpWebStats[["RZcomp"]] <- colMeans(site.by.comp)
+
+#number of competitors
+TotalNuCompetitorsPertarget <- colSums(ShPrey)
+SpWebStats[["Ncomp"]] <- TotalNuCompetitorsPertarget
+
+# mean number of occurrences across competitor for each target
+sh <- ShPrey*site.no.occur
+richsh <- colSums(sh)
+meanRangSizCompetitorPerTargetSp <- richsh / TotalNuCompetitorsPertarget
+SpWebStats[["RScomp"]] <- meanRangSizCompetitorPerTargetSp
+
+
+save(SpWebStats,file = "SpeciesLevelWebStatisticsMW2R25.Rdata")
+```
+
+Set-up
+
+``` r
+load("SpeciesLevelWebStatistics.Rdata")
+load("MW2specieslist.Rdata")
+
+
+t <- do.call("cbind",SpWebStats)
+
+t.sp <- data.frame(t[which( rownames(t) %in% new.species),])
+t.sp$group <- as.factor(gsub("[0-9]*","",rownames(t.sp)))
+
+lst <- list("RangeSize","RSprey","RScomp")
+tsp2 <- sapply(lst, function(x) round((t.sp[,x] / 1000),0) )
+colnames(tsp2) <- unlist(lst)
+
+t.sp <- cbind(t.sp[,c(9,2:4,7:8)],tsp2)
+
+
+BirdCol <- "#7570b3"
+MamCol <- "#d95f02"
+AmphCol <- "#e7298a"
+ReptCol <- "#1b9e77"
+
+
+#function to make boxplots
+boxplotz <- function(dat,col,labels,ylim) {
+    for (x in col) {
+    boxplot(dat[,x] ~ dat$group,ylab="",xlab="",col=c(AmphCol,BirdCol,MamCol,ReptCol),las=1,cex.axis=1.5,
+            cex.lab=1.5,ylim=ylim)
+    mtext(labels[x-1],side=2,padj=-4)
+    }
+}
+
+
+labz <- c("MeanRichness","#Prey","#Competitors","Mean Prey Richness","Mean Comp. Richness","Range Size (1k pixels)","Range Size - Prey","Range Size - Comp")
+
+pdf(file="Figure1stats.pdf",width=7,height=10)
+par(mfrow=c(3,2))
+
+boxplotz(t.sp,col=3:4,labz,ylim=c(0,300))
+boxplotz(t.sp,col=5:6,labz,ylim=c(0,60))
+boxplotz(t.sp,col=8:9,labz,ylim=c(0,320))
+
+dev.off()
+```
+
+Set-up
+
+``` r
+## combine both sets of species for appendix..
+
+
+b <- merge(a,t.sp,by.x='Row.names',by.y=0,all=T)
+
+#save(b,file="BspeciesCompare.Rdata")
+
+load("BspeciesCompare.Rdata")
+
+
+boxplotz2 <- function(dat,columns) {
+    for (x in 1:length(columns)) {
+    boxplot(dat[,columns[x]] ~ dat$group,ylab="",xlab="",col=c(AmphCol,BirdCol,MamCol,ReptCol),las=1,cex.axis=1.5,cex.lab=1.5)
+    mtext(columns[x],side=2,padj=-4)
+    }
+}
+
+# boxplots
+pdf(file="Figure1statsContinuedOtherMetrics.pdf",width=12,height=8)
+
+par(mfrow=c(2,5))
+
+l <- c('prey','compRA','compACra','TL','Eig.cent','RangeSize','meanSRsp')
+
+boxplotz2(b,l)
+
+dev.off()
+
+rm(t.sp,pred.by.prey)
+```
+
+Calculate species level metrics for GloBI interactions
+
+Set-up
+
+``` r
+library(Matrix)
+
+#site by species matrix
+load("~/Dropbox/Manuscripts/EuropeanFoodWebCons/manuscript/Manuscript/Analyses21Feb19/SiteBySpecies21Feb.Rdata")
+
+
+
+#metaweb
+#web from GloBI
+load("pred.by.prey.Metaweb4Globi.Rdata")
+
+if (any( colnames(site.by.species) %in% colnames(pred.by.prey)==FALSE)) {print("mismatched names")}
+
+
+ 
+#set up list
+s <- c("RangeSize","meanSRsp","Nprey","Npred","Ncomp","Napcomp","RSprey","RSpred","RScomp","RSapcomp")
+SpWebStats <- vector("list", length(s)) 
+names(SpWebStats) <- s
+
+#prep
+prey.by.pred <- t(pred.by.prey)
+species.by.site <- t(site.by.species)
+
+#range size of each species
+site.no.occur <- colSums(site.by.species)
+SpWebStats[["RangeSize"]] <- site.no.occur
+
+#ave species richness across cells occupied by species i
+SR <- colSums(species.by.site)
+spSR <- species.by.site*SR
+totspSR <- rowSums(spSR)
+meanspSR <- totspSR/site.no.occur
+SpWebStats[["meanSRsp"]] <- meanspSR
+
+#number of prey per predator
+TotalNuPreySpeciesPerPred <- colSums(prey.by.pred)
+SpWebStats[["Nprey"]] <- TotalNuPreySpeciesPerPred
+
+#number of predator per prey species
+TotalNuPredSpeciesPerPrey <- colSums(pred.by.prey)
+SpWebStats[["Npred"]] <- TotalNuPredSpeciesPerPrey
+  
+# mean number of occurrences across prey for each predator
+prey.preyrichifpred <- prey.by.pred*site.no.occur
+totalrichPreyPerPredSp <- colSums(prey.preyrichifpred)
+meanRangSizPreyPerPredSp <- totalrichPreyPerPredSp / TotalNuPreySpeciesPerPred
+SpWebStats[["RSprey"]] <- meanRangSizPreyPerPredSp
+
+# mean number of occurrences across predator for each prey
+pred.predrichifprey <- pred.by.prey*site.no.occur
+totalrichPredPerPreySp <- colSums(pred.predrichifprey)
+meanRangSizPredPerPreySp <- totalrichPredPerPreySp / TotalNuPredSpeciesPerPrey
+SpWebStats[["RSpred"]] <- meanRangSizPredPerPreySp
+
+
+## competitors---------------
+ShPrey <- pred.by.prey %*% prey.by.pred
+#share 5% of prey
+
+ShPrey <- pred.by.prey %*% prey.by.pred
+cs <- ShPrey/colSums(prey.by.pred)
+cs[cs<0.25] <- 0
+cs[cs>=0.25] <- 1
+cs[is.na(cs)] <- 0 
+ShPrey <- t(cs)
+diag(ShPrey) <- 0
+
+#number of competitors
+TotalNuCompetitorsPertarget <- colSums(ShPrey)
+SpWebStats[["Ncomp"]] <- TotalNuCompetitorsPertarget
+
+# mean number of occurrences across competitor for each target
+sh <- ShPrey*site.no.occur
+richsh <- colSums(sh)
+meanRangSizCompetitorPerTargetSp <- richsh / TotalNuCompetitorsPertarget
+SpWebStats[["RScomp"]] <- meanRangSizCompetitorPerTargetSp
+
+## apparent competitors--------------
+ShPred <- prey.by.pred %*% pred.by.prey
+
+#share 5% of prey
+cs <- ShPred/colSums(pred.by.prey)
+cs[cs<0.25] <- 0
+cs[cs>=0.25] <- 1
+cs[is.na(cs)] <- 0 
+ShPred <- t(cs)
+diag(ShPred) <- 0
+
+#number of competitors
+TotalNuAppCompetitorsPertarget <- colSums(ShPred)
+SpWebStats[["Napcomp"]] <- TotalNuAppCompetitorsPertarget
+
+# mean number of occurrences across app competitor for each target
+sh2 <- ShPred*site.no.occur
+richsh2 <- colSums(sh2)
+meanRangSizAppCompetitorPerTargetSp <- richsh2 / TotalNuAppCompetitorsPertarget
+SpWebStats[["RSapcomp"]] <- meanRangSizAppCompetitorPerTargetSp
+
+save(SpWebStats,file = "SpeciesLevelWebStatisticsGloBI.Rdata")
+
+rm(SpWebStats)
+```
