@@ -1,0 +1,126 @@
+---
+title: |
+ **Supplementary Material.** Model runs and sensitivity analyses. 
+output: pdf_document
+header-includes: \usepackage{float}
+---
+ 
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+
+The aim of the sensitivity analyses is to determine the robustness of the results presented in the main manuscript and to determine whether certain model choices have a disproportionate effect on results. The main axes of variation that we explored were: different metawebs, different biotic metrics, different taxonomic groups, different input occurrence data,different types of cross-validation, and different model algorithms.
+
+1. Metawebs: MW1=the potential metaweb with interactions for all life stages except eggs; M2=same as M1 except relationships are constrained such that predator-prey combinations must occur in at least one pixel together). MW3-GloBI=metaweb built from GLoBI data available for european vertebrates. 
+
+2. Biotic metrics: 25%=competitor richness (defined as species that share at least 25% of their prey species out of the total number of prey for that species); 90%=competitor richness (defined as species that share at least 90% of their prey species out of the total number of prey for that species); All=competitor richness (defined as species that share at least one prey); the logged version of both competitors (the 25% threshold) and prey; and a model including prey richness and total species richness (SR) in place of competitor richness.
+
+We included sensitivity to biotic variable transformations because we might expect the effect of prey (or predator) richness to be different for different numbers of prey. For example, we might expect a larger effect if we add 2 species to a species-poor community than adding 2 species to an already prey-rich community. For this reason, we logged both biotic terms. While the results did change slightly, it was not enough to impact the main results presented in the manuscript (Fig. S2). 
+
+We also explored whether the effect of biotic terms could be explained by the overall species richness in communities. In other words, the effect we see of prey and competition could result, not necessarily from a biotic interaction, but from the fact that there are many species present in an area. Species richness could explain some variation in the models that is not explained by the abiotic variables. For example, species richness could have a positive effect on the species distributions of many species because most species are found areas of greater richness. To test this, we included the effect of total species richness with prey richness. In this model, the prey richness had a very strong positive effect, wherease the species richness had no overall effect (Fig. S7)
+
+
+3. Taxonomic groups: Birds, Mammals, Reptiles and Amphibians representing the Classes Animalia, Mammalia, Reptilia, and Amphibia. While Reptilia does not represent a monophylectic clade, here we use the term 'reptiles' for simplicity.
+
+4. Cross-validation runs: Cross-validation runs include different types of sampling for training and testing data (random sample, spatial block-longitude and spatial block-latitude). For each type of cross-validation, three sets of model were run including all variables (Full) and partial models (Part.) with only abiotic or only biotic variables.
+
+5. Distribution data: data used in manuscript (Original) compared to GBIF distributions (only for amphibian species).GBIF localities were filtered into binary presence/absences based on the occurrence in 5-km pixels (‘GBIF1’) or two occurrences (‘GBIF2’). Based on a visual assessment, GBIF1 tended to have a number of isolated occurrences outside the documented range extent of the species, but GBIF2 had more spatial gaps within the species range. Also note that the original analysis detailing this distribution data compared distribution data with that of GBIF occurrences for birds, mammals, amphibians, and reptiles (see Maiorano et al. 2013).
+
+\newpage
+**Table S1. List of model runs for different metawebs, biotic metrics, cross-validation runs, and distribution data.**
+
+For all sets of runs listed below, all species that had at least on prey species (all predators in the dataset) were modelled separately using two separate modelling algorithms: bayesian generalized models (presented in the main text) and boosted regression trees (>10k total models). 
+
+```{r setup,echo=FALSE}
+knitr::opts_knit$set(root.dir = '~/Dropbox/Manuscripts/EuropeanFoodWebCons/manuscript/Manuscript/Analyses3Feb20')
+```
+```{r, echo=FALSE,results='hide',warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+
+mw <- c('MW1','MW3',rep('MW2',16))
+met <- c('25%','All','All','25%','90%','log','SR',rep('25%',11))
+pred <- c(rep("Full",7),rep(c("Full Model","Biotic Only","Abiotic Only"),3),rep("Full Model",2))
+cross <- c(rep("All data",7),rep('Random',3),rep('Spatial-long',3),rep('Spatial-lat',3),rep('All data',2))
+dist <- c(rep('Original',16),rep('GBIF',2))                            
+     
+tab <- cbind(mw,met,pred,cross,dist)
+
+tab <- rbind(tab,tab[1:16,],tab[1:16,],tab[1:16,])
+
+indx <- seq(1,nrow(tab),1)
+gr <- c(rep("Amph.",18),rep("Bird",16),rep("Mammal",16),rep("Reptile",16))
+
+tab <- cbind(indx,gr,tab)
+
+colnames(tab) <- c("Set of runs","Group","Metaweb","Biotic Metric","Predictors","Cross-validation","Distribution Data")
+
+
+
+
+```
+
+```{r, echo=FALSE,warning=FALSE}
+
+kable(tab, longtable=TRUE) %>%
+kable_styling(latex_options = c("scale_down","repeat_header"))
+#"scale_down"
+```
+
+
+\newpage
+
+```{r image1, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='1.0\\linewidth'}
+knitr::include_graphics("AppendixFigS1ParamsGold.pdf")
+```
+
+**Figure S1.** Summary of parameter estimates obtained for the models used in the main text (with Metaweb 2 and competition defined by sharing 25% of prey species), explanding upon the mean parameter estimates presented in Figure 2a in the main text. A) Boxplot of mean parameter values (logit scale) averaged across species in each taxonomic Order. B) Stacked barplot summarizing the 95% credible intervals for individual species models in each Class (credible interval falls below zero ('Negative'), overlaps zero, or is above zero ('Positive'). 
+
+
+```{r image2, echo = FALSE, message=FALSE, fig.align='left', fig.cap='',out.width='0.75\\linewidth'}
+knitr::include_graphics("AppendixBetaVarBioticMetrics.pdf")
+```
+**Figure S2.** Mean parameter estimates (logit scale) averaged across all species models for each type of biotic metric. Biotic metrics: 25%=competitor richness (defined as species that share at least 25% of their prey species out of the total number of prey for that species); 90%=competitor richness (defined as species that share at least 90% of their prey species out of the total number of prey for that species); All=competitor richness (defined as species that share at least one prey); the logged version of both competitors (using the 25% shared prey threshold) and prey. Error bars are 95% confidence intervals of the mean estimates. Error bars are 95% confidence intervals.
+
+
+```{r image3, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='0.75\\linewidth'}
+knitr::include_graphics("AppendixBetaVarCrossValidation.pdf")
+```
+
+**Figure S3.** Mean parameter estimates averaged across all species models for each type of cross-validation. Cross-validation runs include different types of sampling for training and testing data (random sample, spatial block-longitude and spatial block-latitude). For each type of cross-validation, three sets of model were run including all variables (Full) and partial models (Part.) with only abiotic or only biotic variables. Error bars are 95% confidence intervals.
+
+
+```{r image4, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='0.75\\linewidth'}
+knitr::include_graphics("AppendixBetaVarTaxonGroups2.pdf")
+```
+**Figure S4.** Mean parameter estimates averaged across species models for species in taxonomic groups: amphibians (Amph.), birds, mammals (Mamm.), and reptiles (Rept). Opaque dots are for 'Full' model in which both abiotic and biotic variables were used. Partially transparent dots are partial models (Part.) in which only abiotic or only biotic variables (prey and competitor) were used in the model. For example, for 'Prey', the opaque dots represent the mean parameter estimate for the model with prey and all other variables, wheras the transparent dots are a model that only includes the effect of prey and competitors (not any environmental variables). Error bars are 95% confidence intervals.
+
+
+```{r image5, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='0.75\\linewidth'}
+knitr::include_graphics("AppendixBetaVarMetawebs.pdf")
+```
+**Figure S5.** Mean parameter estimates averaged across all species models for each type of metaweb: MW1=the potential metaweb with interactions for all life stages except eggs; M2=same as M1 except relationships are constrained such that predator-prey combinations must occur in at least one pixel together). MW-Globi=metaweb built with GLOBI data available for european vertebrates. Error bars are 95% confidence intervals of the mean estimates.
+
+
+
+```{r image6, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='0.75\\linewidth'}
+knitr::include_graphics("AppendixGBIFamphs.pdf")
+```
+**Figure S6.** Mean parameter estimates for different types on input data including: the original distribution data used in the manuscript (see Materials and Methods), for the original distribution data and logged biotic variables (Orig-Log), for distributions obtained from GBIF and filtered based on a single occurrence of a species in a pixel (GBIF-1), and for distributions obtained from GBIF and filtered by two occurrences of a species in a cell (GBIF-2). Only the subset of 22 amphibian species that have vertebrate prey and that were available in GBIF were used in this comparison. While the same predator species were used, the models are not directly comparable as not all prey species were available in GBIF and competitors were limited to only amphibian species. As reflected in the intercept term, in the GBIF data, species tended to be less prevalent on average across the landscape using GBIF data (especially GBIF2). Based on visual comparisons of the three datasets, GBIF1 occurrence data had a number of isolated occurrences outside the documented range extent of the species, but GBIF2 had more spatial gaps within the species range.  
+
+
+```{r image7, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='0.75\\linewidth'}
+knitr::include_graphics("AppendixSpeciesRichness.pdf")
+```
+
+**Figure S7.** Mean parameter estimates for models with species richness (SR) included as a predictor in addition to the number of prey and environmental variables. 
+
+
+```{r image8, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='0.75\\linewidth'}
+knitr::include_graphics("FigureSRScatterAppendix.pdf")
+```
+**Figure S8.** The predicted species richness of predators for current levels of prey and for prey increased by 25% and 50%. Predictions are made based on the models used in the main text and all other variables (competitors and abiotic variables) are held constant. 
+

@@ -1,0 +1,58 @@
+---
+title: "Table S1. List of model runs"
+output: pdf_document
+---
+
+**List of model runs for different metawebs, biotic metrics, cross-validation runs, and distribution data.**
+
+1. Metawebs: MW1=the potential metaweb with interactions for all life stages except eggs; M2=same as M1 except relationships are constrained such that predator-prey combinations must occur in at least one pixel together). MW-Globi=metaweb built from GLOBI data available for european vertebrates.
+
+2. Biotic metrics: 25%=competitor richness (defined as species that share at least 25% of their prey species out of the total number of prey for that species); 90%=competitor richness (defined as species that share at least 90% of their prey species out of the total number of prey for that species); All=competitor richness (defined as species that share at least one prey); the logged version of both competitors (the 25% threshold) and prey; and a model including prey richness and total species richness (SR) in place of competitor richness.
+
+3. Taxonomic groups: Birds, Mammals, Reptiles and Amphibians
+
+4. Cross-validation runs: Cross-validation runs include different types of sampling for training and testing data (random sample, spatial block-longitude and spatial block-latitude). For each type of cross-validation, three sets of model were run including all variables (Full) and partial models (Part.) with only abiotic or only biotic variables.
+
+5. Distribution data: data used in manuscript (Original) compared to GBIF distributions (only for amphibian species).
+
+For each runs listed below, all species that had at least on prey species (all predators in the dataset) were modelled separately and two different model algorithms were used: bayesian generalized linear models and boosted regressions trees (>10k total models)
+
+```{r setup,echo=FALSE}
+knitr::opts_knit$set(root.dir = '~/Dropbox/Manuscripts/EuropeanFoodWebCons/manuscript/Manuscript/Analyses3Feb20')
+```
+
+```{r, echo=FALSE,results='hide',warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+
+mw <- c('MW1','MW4',rep('MW2',16))
+met <- c('25%','All','All','25%','90%','log','SR',rep('25%',11))
+pred <- c(rep("Full",7),rep(c("Full Model","Biotic Only","Abiotic Only"),3),rep("Full Model",2))
+cross <- c(rep("All data",7),rep('Random',3),rep('Spatial-long',3),rep('Spatial-lat',3),rep('All data',2))
+dist <- c(rep('Original',16),rep('GBIF',2))                            
+     
+tab <- cbind(mw,met,pred,cross,dist)
+
+tab <- rbind(tab,tab[1:16,],tab[1:16,],tab[1:16,])
+
+indx <- seq(1,nrow(tab),1)
+gr <- c(rep("Amph.",18),rep("Bird",16),rep("Mammal",16),rep("Reptile",16))
+
+tab <- cbind(indx,gr,tab)
+
+colnames(tab) <- c("Set of runs","Group","Metaweb","Biotic Metric","Predictors","Cross-validation","Distribution Data")
+
+
+
+
+```
+
+
+```{r, echo=FALSE,warning=FALSE}
+
+kable(tab, longtable=TRUE) %>%
+kable_styling(latex_options = c("scale_down","repeat_header"))
+#"scale_down"
+```
+                 

@@ -1,0 +1,48 @@
+---
+title: 
+output: pdf_document
+header-includes: \usepackage{float}
+---
+  
+  
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+
+ 
+```{r image1, echo = FALSE, message=FALSE, fig.align='left', fig.cap='',out.width='1.0\\linewidth'}
+knitr::include_graphics("Figure1.pdf")
+```
+
+**Figure 1.** Summary of prey and competitor characteristics for the set of models used in the main text (Metaweb 2; competitor richness=25%). For each predator (target) species used in the modelling: a) the total number of its potential prey (left panels) and competitors (right panels) from the metaweb (MW2; see methods), b) the ‘realized’ mean species richness (SR) of prey and competitors found in pixels across its geographic range, and c) the mean range size of prey and competitor species found across its geographic range. Boxplots are the distribution across all species of amphibian (A), bird (B), mammal (M), and reptile (R), boxes are the Inner Quartile Range (IQR) and whiskers extend 1.5*IQR.
+
+```{r image2, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='1.00\\linewidth'}
+knitr::include_graphics("FigParamsExampleResponseCurves.pdf")
+```
+**Figure 2. ** How biotic and environmental variables influence the probability of occurrence for species in each taxonomic class (A) and how that probability changes with prey number, minimum temperature, and human footprint for an example species in each group (B). In panel A, colored dots are mean parameter estimates for abiotic and environmental variables averaged across species in each group (with 95% confidence intervals) and grey dots are the mean parameter estimates for the example species shown in panel B. Example species were chosen that had a prey effect similar to the group average. The three lines represent the modelled response for few prey (25^th^ percentile), median prey, and many prey (75^th^ percentile). 
+
+
+```{r image3, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='1.0\\linewidth'}
+knitr::include_graphics("FigureMaps.pdf")
+```
+**Figure 3.** Species Richness (SR) of predator species estimated from distribution models with biotic and environmental variables (A) and the projected change in projected SR when prey species are increased by 25% in each pixel for each species. The relationship between SR and the projected %change in SR are shown with dots representing pixels (C). SR is estimated by summing the probabilities of individual models with observed prey numbers. The %change in SR is (SR~25%prey~ - SR~obs.prey~) / SR~obs.prey~ * 100. 
+
+```{r image4, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='1.00\\linewidth'}
+knitr::include_graphics("FigperformanceAUC.pdf")
+```
+**Figure 4.** Model performance measured across types of models and cross-validation. Model types include full models with all biotic and environmental variables (see Fig. 2 for a list of variables), models with only biotic variables and only environmental variables. Performance was assessed with area under the receiver operating characteristic curve (AUC) and area under the precision recall curve (AUCPRC) for each type of cross-validation (random selection of sites and sampling based on a spatial block stratified by longitude or latitude). Mean performance across species models are shown with 95% confidence intervals for bayesian GLMs presented in the main text (A) and BRT models for comparison (B). 
+
+
+```{r image5, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='1.00\\linewidth'}
+knitr::include_graphics("FigperformanceAUCrangesize.pdf")
+```
+**Figure 5.** Model performance (from Bayesian GLMs) related to species range size. Each dot represents performance for a single model and lines are the partial effects from a model of species range size on performance metric (solid lines are significant at p<0.05). 
+
+
+```{r image6, echo = FALSE, message=FALSE, fig.align='left', fig.cap='', out.width='1.00\\linewidth'}
+knitr::include_graphics("BiasMiscalibrationBetas.pdf")
+```
+**Figure 6.** The mean effect, bias, and miscalibration of biotic and environmental variables. Bias indicates an overall directional bias in parameter estimates and is the difference between the mean parameters estimates for the full models (used in the main text) and partial models (biotic-only or environmental-only) fit on the training datasets used in cross-validation runs (random selection, selection based on latitude and longitude). Miscalibration estimates the summed error and is the absolute value of the bias estimates for each species. Dots are the mean (and error bars the 95% confidence intervals) across all species-level means.
+
+
